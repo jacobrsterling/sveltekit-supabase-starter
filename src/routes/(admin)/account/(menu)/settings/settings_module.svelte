@@ -2,6 +2,11 @@
   import { enhance, applyAction } from "$app/forms"
   import { page } from "$app/stores"
   import type { SubmitFunction } from "@sveltejs/kit"
+  import { Card, CardHeader, CardTitle, CardContent } from "$lib/components/ui/card"
+  import { Button } from "$lib/components/ui/button"
+  import { Alert, AlertDescription } from "$lib/components/ui/alert"
+  import { Input } from "$lib/components/ui/input"
+  import { Label } from "$lib/components/ui/label"
 
   const fieldError = (liveForm: FormAccountUpdateResult, name: string) => {
     let errors = liveForm?.errorFields ?? []
@@ -63,111 +68,92 @@
   }
 </script>
 
-<div class="card p-6 pb-7 mt-8 max-w-xl flex flex-col md:flex-row shadow-sm">
-  {#if title}
-    <div class="text-xl font-bold mb-3 w-48 md:pr-8 flex-none">{title}</div>
-  {/if}
+<Card class="mb-6">
+  <CardHeader class="flex flex-row items-start justify-between space-y-0 pb-4">
+    {#if title}
+      <CardTitle class="text-xl">{title}</CardTitle>
+    {/if}
+  </CardHeader>
 
-  <div class="w-full min-w-48">
+  <CardContent>
     {#if !showSuccess}
       {#if message}
-        <div class="mb-6 {dangerous ? 'alert alert-warning' : ''}">
-          {#if dangerous}
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="stroke-current shrink-0 h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              ><path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              /></svg
-            >
-          {/if}
-
-          <span>{message}</span>
-        </div>
+        <Alert variant={dangerous ? "destructive" : "default"} class="mb-4">
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
       {/if}
+
       <form
-        class="form-widget flex flex-col"
+        class="space-y-4"
         method="POST"
         action={formTarget}
         use:enhance={handleSubmit}
       >
         {#each fields as field}
-          {#if field.label}
-            <label for={field.id}>
-              <span class="text-sm text-gray-500">{field.label}</span>
-            </label>
-          {/if}
-          {#if editable}
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.inputType ?? "text"}
-              disabled={!editable}
-              placeholder={field.placeholder ?? field.label ?? ""}
-              class="{fieldError($page?.form, field.id)
-                ? 'input-error'
-                : ''} input-sm mt-1 input input-bordered w-full max-w-xs mb-3 text-base py-4"
-              value={$page.form ? $page.form[field.id] : field.initialValue}
-              maxlength={field.maxlength ? field.maxlength : null}
-            />
-          {:else}
-            <div class="text-lg mb-3">{field.initialValue}</div>
-          {/if}
+          <div class="space-y-2">
+            {#if field.label}
+              <Label for={field.id}>{field.label}</Label>
+            {/if}
+            {#if editable}
+              <Input
+                id={field.id}
+                name={field.id}
+                type={field.inputType ?? "text"}
+                disabled={!editable}
+                placeholder={field.placeholder ?? field.label ?? ""}
+                class={fieldError($page?.form, field.id) ? "border-destructive" : ""}
+                value={$page.form ? $page.form[field.id] : field.initialValue}
+                maxlength={field.maxlength ? field.maxlength : undefined}
+              />
+            {:else}
+              <div class="text-sm font-medium">{field.initialValue}</div>
+            {/if}
+          </div>
         {/each}
 
         {#if $page?.form?.errorMessage}
-          <p class="text-red-700 text-sm font-bold mt-1">
+          <p class="text-destructive text-sm font-medium">
             {$page?.form?.errorMessage}
           </p>
         {/if}
 
         {#if editable}
-          <div>
-            <button
+          <div class="flex justify-end pt-2">
+            <Button
               type="submit"
-              class="ml-auto btn btn-sm mt-3 min-w-[145px] {dangerous
-                ? 'btn-error'
-                : 'btn-primary btn-outline'}"
+              variant={dangerous ? "destructive" : "default"}
               disabled={loading}
+              class="min-w-[145px]"
             >
               {#if loading}
-                <span
-                  class="loading loading-spinner loading-md align-middle mx-3"
-                ></span>
+                <span class="mr-2">Loading...</span>
               {:else}
                 {saveButtonTitle}
               {/if}
-            </button>
+            </Button>
           </div>
         {:else if editButtonTitle && editLink}
-          <!-- !editable -->
-          <a href={editLink} class="mt-1">
-            <button
-              class="btn btn-outline btn-sm {dangerous
-                ? 'btn-error'
-                : ''} min-w-[145px]"
+          <div class="flex justify-end pt-2">
+            <Button
+              href={editLink}
+              variant={dangerous ? "destructive" : "outline"}
+              class="min-w-[145px]"
             >
               {editButtonTitle}
-            </button>
-          </a>
+            </Button>
+          </div>
         {/if}
       </form>
     {:else}
-      <!-- showSuccess -->
-      <div>
-        <div class="text-l font-bold">{successTitle}</div>
-        <div class="text-base">{successBody}</div>
-      </div>
-      <a href="/account/settings">
-        <button class="btn btn-outline btn-sm mt-3 min-w-[145px]">
+      <div class="space-y-4">
+        <div>
+          <div class="font-semibold">{successTitle}</div>
+          <div class="text-sm text-muted-foreground">{successBody}</div>
+        </div>
+        <Button href="/account/settings" variant="outline">
           Return to Settings
-        </button>
-      </a>
+        </Button>
+      </div>
     {/if}
-  </div>
-</div>
+  </CardContent>
+</Card>

@@ -1,25 +1,38 @@
 <script lang="ts">
   import { Auth } from "@supabase/auth-ui-svelte"
   import { sharedAppearance, oauthProviders } from "../login_config"
+  import { Card, CardHeader, CardTitle, CardContent } from "$lib/components/ui/card"
 
   let { data } = $props()
 </script>
 
 <svelte:head>
-  <title>Sign up</title>
+  <title>Sign up - EP Dealer Portal</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold mb-6">Sign Up</h1>
-<Auth
-  supabaseClient={data.supabase}
-  view="sign_up"
-  redirectTo={`${data.url}/auth/callback`}
-  showLinks={false}
-  providers={oauthProviders}
-  socialLayout="horizontal"
-  appearance={sharedAppearance}
-  additionalData={undefined}
-/>
-<div class="text-l text-slate-800 mt-4 mb-2">
-  Have an account? <a class="underline" href="/login/sign_in">Sign in</a>.
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+  <Card class="w-[400px]">
+    <CardHeader>
+      <CardTitle class="text-2xl font-bold text-center">Create Account</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <Auth
+        supabaseClient={data.supabase}
+        view="sign_up"
+        redirectTo={`${data.url}/auth/callback`}
+        showLinks={false}
+        providers={oauthProviders}
+        socialLayout="horizontal"
+        appearance={sharedAppearance}
+        additionalData={undefined}
+      />
+
+      <div class="mt-4 text-center text-sm text-muted-foreground">
+        Already have an account?
+        <a href="/sign_in" class="text-primary hover:underline ml-1">
+          Sign in
+        </a>
+      </div>
+    </CardContent>
+  </Card>
 </div>

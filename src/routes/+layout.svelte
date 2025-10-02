@@ -1,26 +1,23 @@
 <script lang="ts">
+  import { invalidate } from "$app/navigation"
+  import { onMount } from "svelte"
+
   interface Props {
     children?: import("svelte").Snippet
+    data: any
   }
 
-  let { children }: Props = $props()
-  let isEurope = $state(false)
-  try {
-    isEurope = Intl.DateTimeFormat()
-      .resolvedOptions()
-      .timeZone.startsWith("Europe/")
-  } catch (e) {
-    /* continue */
-  }
+  let { children, data }: Props = $props()
+
+  onMount(() => {
+    const { data: authListener } = data.supabase.auth.onAuthStateChange(async (event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        invalidate("supabase:auth")
+      }
+    })
+
+    return () => authListener.subscription.unsubscribe()
+  })
 </script>
 
-<div
-  class="text-center content-center max-w-lg mx-auto min-h-[70vh] pb-12 flex items-center place-content-center"
->
-  <div class="flex flex-col w-64 lg:w-80">
-    {@render children?.()}
-    <div class="mt-8 {isEurope ? 'block' : 'hidden'}">
-      🍪 Logging in uses Cookies 🍪
-    </div>
-  </div>
-</div>
+{@render children?.()}

@@ -3,28 +3,49 @@ import type { Provider } from "@supabase/supabase-js"
 
 export const oauthProviders = ["github"] as Provider[]
 
-// use the css variables from DaisyUI to style Supabase auth template
+// Updated to use shadcn color system
 export const sharedAppearance = {
   theme: ThemeSupa,
-  variables: {
-    default: {
-      colors: {
-        brand: "oklch(var(--p))",
-        brandAccent: "oklch(var(--ac))",
-        inputText: "oklch(var(--n))",
-        brandButtonText: "oklch(var(--pc))",
-        messageText: "oklch(var(--b))",
-        dividerBackground: "oklch(var(--n))",
-        inputLabelText: "oklch(var(--n))",
-        defaultButtonText: "oklch(var(--n))",
-        anchorTextColor: "oklch(var(--p))",
-      },
-      fontSizes: {
-        baseInputSize: "16px",
-      },
+  style: {
+    button: {
+      backgroundColor: 'hsl(var(--primary))',
+      color: 'hsl(var(--primary-foreground))',
+      borderRadius: 'calc(var(--radius) - 2px)',
+      padding: '0.5rem 1rem',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      height: '2.5rem',
+      transition: 'all 150ms',
     },
-  },
-  className: {
-    button: "authBtn",
-  },
+    anchor: {
+      color: 'hsl(var(--primary))',
+      fontSize: '0.875rem',
+      textDecoration: 'underline',
+      textUnderlineOffset: '4px',
+    },
+    label: {
+      color: 'hsl(var(--foreground))',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      marginBottom: '0.25rem',
+      display: 'block',
+    },
+    input: {
+      backgroundColor: 'transparent',
+      borderColor: 'hsl(var(--input))',
+      borderWidth: '1px',
+      borderRadius: 'calc(var(--radius) - 2px)',
+      fontSize: '0.875rem',
+      padding: '0.5rem 0.75rem',
+      color: 'hsl(var(--foreground))',
+      height: '2.5rem',
+    },
+    divider: {
+      backgroundColor: 'hsl(var(--border))',
+    },
+    message: {
+      color: 'hsl(var(--foreground))',
+      fontSize: '0.875rem',
+    },
+  }
 }

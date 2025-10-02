@@ -1,10 +1,6 @@
 <script lang="ts">
   import SettingsModule from "../settings_module.svelte"
-  import { getContext } from "svelte"
-  import type { Writable } from "svelte/store"
 
-  let adminSection: Writable<string> = getContext("adminSection")
-  adminSection.set("settings")
 
   let { data } = $props()
 

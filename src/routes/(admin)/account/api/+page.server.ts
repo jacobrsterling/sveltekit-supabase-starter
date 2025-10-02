@@ -7,7 +7,7 @@ export const actions = {
     const { session } = await safeGetSession()
 
     if (!session) {
-      redirect(303, "/login")
+      redirect(303, "/")
     }
 
     const { data: currentProfile } = await supabase
@@ -35,7 +35,7 @@ export const actions = {
   updateEmail: async ({ request, locals: { supabase, safeGetSession } }) => {
     const { session } = await safeGetSession()
     if (!session) {
-      redirect(303, "/login")
+      redirect(303, "/")
     }
 
     const formData = await request.formData()
@@ -78,7 +78,7 @@ export const actions = {
   updatePassword: async ({ request, locals: { supabase, safeGetSession } }) => {
     const { session, user, amr } = await safeGetSession()
     if (!session) {
-      redirect(303, "/login")
+      redirect(303, "/")
     }
 
     const formData = await request.formData()
@@ -155,7 +155,7 @@ export const actions = {
       })
       if (error) {
         // The user was logged out because of bad password. Redirect to error page explaining.
-        redirect(303, "/login/current_password_error")
+        redirect(303, "/current_password_error")
       }
     }
 
@@ -184,7 +184,7 @@ export const actions = {
   }) => {
     const { session, user } = await safeGetSession()
     if (!session || !user?.id) {
-      redirect(303, "/login")
+      redirect(303, "/")
     }
 
     const formData = await request.formData()
@@ -227,7 +227,7 @@ export const actions = {
   updateProfile: async ({ request, locals: { supabase, safeGetSession } }) => {
     const { session, user } = await safeGetSession()
     if (!session || !user?.id) {
-      redirect(303, "/login")
+      redirect(303, "/")
     }
 
     const formData = await request.formData()
