@@ -1,5 +1,5 @@
-export const WebsiteName: string = "SaaS Starter"
-export const WebsiteBaseUrl: string = "https://saasstarter.work"
+export const WebsiteName: string = "EP Dealer Portal"
+export const WebsiteBaseUrl: string = "http://localhost:5173"
 export const WebsiteDescription: string =
-  "Open source, fast, and free to host SaaS template. Built with SvelteKit, Supabase, Stripe, Tailwind, DaisyUI, and Postgres"
+  "Dealer portal for managing leads and accessing dealer information"
 export const CreateProfileStep: boolean = true

@@ -1,5 +1,5 @@
 {
-  "name": "cmsassstarter",
+  "name": "ep-dealer-portal",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -20,23 +20,15 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
     "@tailwindcss/postcss": "^4.0.9",
     "@tailwindcss/typography": "^0.5.13",
-    "@types/glob": "^8.1.0",
-    "@types/html-to-text": "^9.0.4",
-    "@types/jsdom": "^21.1.7",
     "@typescript-eslint/eslint-plugin": "^6.20.0",
     "@typescript-eslint/parser": "^6.19.0",
     "daisyui": "^5.0.0",
     "eslint": "^8.28.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.45.1",
-    "fuse.js": "^7.0.0",
-    "glob": "^10.4.5",
-    "html-to-text": "^9.0.5",
-    "jsdom": "^24.1.1",
     "postcss": "^8.4.31",
     "prettier": "^3.1.0",
     "prettier-plugin-svelte": "^3.2.6",
-    "super-sitemap": "^0.15.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.0.9",
@@ -46,13 +38,13 @@
   },
   "type": "module",
   "dependencies": {
+    "@anthropic-ai/claude-code": "^2.0.1",
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/auth-ui-svelte": "^0.2.9",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.2",
     "handlebars": "^4.7.8",
-    "resend": "^3.5.0",
-    "stripe": "^13.3.0"
+    "resend": "^3.5.0"
   },
   "overrides": {
     "@supabase/auth-ui-svelte": {
