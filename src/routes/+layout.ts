@@ -30,6 +30,8 @@ export const load = async ({ fetch, data, depends }) => {
 
   const url = data.url
   const session = data.session
+  const isImpersonating = data.isImpersonating
+  const originalUserEmail = data.originalUserEmail
 
-  return { supabase, url, session }
+  return { supabase, url, session, isImpersonating, originalUserEmail }
 }

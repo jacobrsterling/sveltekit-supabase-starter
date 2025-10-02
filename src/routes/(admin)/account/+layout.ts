@@ -3,7 +3,8 @@ import type { Database } from "../../../DatabaseDefinitions.js"
 import { CreateProfileStep } from "../../../config"
 
 export const load = async ({ parent, url }) => {
-  const { supabase, session } = await parent()
+  const parentData = await parent()
+  const { supabase, session } = parentData
 
   if (!session) {
     redirect(303, "/")
@@ -30,6 +31,7 @@ export const load = async ({ parent, url }) => {
   }
 
   return {
+    ...parentData, // Include all parent data (isImpersonating, originalUserEmail, etc.)
     supabase,
     session,
     profile,

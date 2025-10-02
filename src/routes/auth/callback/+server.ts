@@ -9,11 +9,11 @@ export const GET = async (event) => {
 
   // Handle token-based auth (for impersonation)
   if (accessToken && refreshToken) {
-    const { error } = await locals.supabase.auth.setSession({
+    const { error, data } = await locals.supabase.auth.setSession({
       access_token: accessToken,
       refresh_token: refreshToken,
     })
-    if (!error) {
+    if (!error && data.session) {
       throw redirect(303, next)
     }
     console.error('Error setting session:', error)

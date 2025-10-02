@@ -224,7 +224,7 @@ export const actions: Actions = {
       website,
     }
   },
-  impersonateUser: async ({ request, locals: { supabase, supabaseServiceRole, safeGetSession } }) => {
+  impersonateUser: async ({ request, locals: { supabase, supabaseServiceRole, safeGetSession }, cookies }) => {
     const { session } = await safeGetSession()
     if (!session) {
       redirect(303, "/")
@@ -248,6 +248,25 @@ export const actions: Actions = {
     }
 
     try {
+      // Store the CURRENT user's session (from safeGetSession which we already have)
+      // This is guaranteed to be the admin user who is doing the impersonation
+      if (session) {
+        const cookieData = JSON.stringify({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+          user_id: session.user.id,
+          user_email: session.user.email
+        })
+
+        cookies.set('original_session', cookieData, {
+          path: '/',
+          httpOnly: true,
+          secure: false, // Allow on localhost
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24 // 24 hours
+        })
+      }
+
       // Get the user details
       const { data: userData, error: userError } = await supabaseServiceRole.auth.admin.getUserById(userId)
 
@@ -257,8 +276,6 @@ export const actions: Actions = {
           errorMessage: "Failed to fetch user details: " + (userError?.message || "Unknown error"),
         })
       }
-
-      console.log("Generating link for user:", userData.user.email)
 
       // Generate a magic link which contains the access and refresh tokens
       const { data: linkData, error: linkError } = await supabaseServiceRole.auth.admin.generateLink({
@@ -272,9 +289,6 @@ export const actions: Actions = {
           errorMessage: "Failed to generate impersonation session: " + (linkError?.message || "Unknown error"),
         })
       }
-
-      console.log("Link generated successfully")
-      console.log("Link data:", JSON.stringify(linkData, null, 2))
 
       // Extract tokens from the magic link URL - they might be in hash or query params
       const actionLink = linkData.properties.action_link
@@ -292,12 +306,8 @@ export const actions: Actions = {
         refreshToken = hashParams.get('refresh_token')
       }
 
-      console.log("Tokens extracted:", { hasAccess: !!accessToken, hasRefresh: !!refreshToken })
-      console.log("URL:", actionLink)
-
       // Alternative approach: Use the hashed_token directly
       if (!accessToken && linkData.properties.hashed_token) {
-        console.log("Using hashed_token approach")
         const hashedToken = linkData.properties.hashed_token
 
         // Verify the OTP token to get a session
@@ -315,7 +325,6 @@ export const actions: Actions = {
 
         accessToken = verifyData.session.access_token
         refreshToken = verifyData.session.refresh_token
-        console.log("Got tokens from OTP verification")
       }
 
       if (!accessToken || !refreshToken) {
@@ -325,10 +334,8 @@ export const actions: Actions = {
         })
       }
 
-      console.log("Redirecting with tokens...")
-
       // Store tokens to redirect with - must be done outside try-catch
-      const redirectUrl = `/auth/callback?access_token=${accessToken}&refresh_token=${refreshToken}&type=magiclink`
+      const redirectUrl = `/auth/callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&next=/account`
 
       // Redirect with tokens as query params - Supabase auth will pick them up
       throw redirect(303, redirectUrl)
@@ -341,6 +348,49 @@ export const actions: Actions = {
       console.error("Unexpected error during impersonation:", error)
       return fail(500, {
         errorMessage: "An unexpected error occurred: " + (error as Error).message,
+      })
+    }
+  },
+  stopImpersonation: async ({ locals: { supabase }, cookies }) => {
+    // Get the original session from cookies
+    const originalSessionCookie = cookies.get('original_session')
+
+    if (!originalSessionCookie) {
+      return fail(400, {
+        errorMessage: "No original session found",
+      })
+    }
+
+    try {
+      const originalSession = JSON.parse(originalSessionCookie)
+
+      // Restore the original session
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: originalSession.access_token,
+        refresh_token: originalSession.refresh_token,
+      })
+
+      if (sessionError) {
+        console.error("Error restoring session:", sessionError)
+        return fail(500, {
+          errorMessage: "Failed to restore original session: " + sessionError.message,
+        })
+      }
+
+      // Clear the original session cookie
+      cookies.delete('original_session', { path: '/' })
+
+      // Redirect to the users page
+      throw redirect(303, "/account/users")
+    } catch (error) {
+      // Re-throw redirect errors
+      if (error && typeof error === 'object' && 'status' in error && error.status === 303) {
+        throw error
+      }
+
+      console.error("Error during stop impersonation:", error)
+      return fail(500, {
+        errorMessage: "Failed to stop impersonation: " + (error as Error).message,
       })
     }
   },
