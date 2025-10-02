@@ -10,7 +10,6 @@
   interface Profile {
     full_name?: string
     company_name?: string
-    website?: string
   }
 
   interface Props {
@@ -25,7 +24,6 @@
   let loading = $state(false)
   let fullName: string = profile?.full_name ?? ""
   let companyName: string = profile?.company_name ?? ""
-  let website: string = profile?.website ?? ""
 
   const fieldError = (liveForm: FormAccountUpdateResult, name: string) => {
     let errors = liveForm?.errorFields ?? []
@@ -88,23 +86,6 @@
               ? 'input-error'
               : ''} mt-1 input input-bordered w-full max-w-xs"
             value={form?.companyName ?? companyName}
-            maxlength="50"
-          />
-        </div>
-
-        <div class="mt-4">
-          <label for="website">
-            <span class="text-l text-center">Company Website</span>
-          </label>
-          <input
-            id="website"
-            name="website"
-            type="text"
-            placeholder="Company website"
-            class="{fieldError(form, 'website')
-              ? 'input-error'
-              : ''} mt-1 input input-bordered w-full max-w-xs"
-            value={form?.website ?? website}
             maxlength="50"
           />
         </div>

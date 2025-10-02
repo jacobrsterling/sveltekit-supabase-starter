@@ -1,4 +1,6 @@
 import { redirect, fail } from "@sveltejs/kit"
+import { validateUserCreate, validateUserUpdate } from "$lib/helpers/validation"
+import { createLog } from "$lib/helpers/logs"
 import type { PageServerLoad, Actions } from "./$types"
 
 export const load: PageServerLoad = async ({
@@ -9,10 +11,10 @@ export const load: PageServerLoad = async ({
     redirect(303, "/")
   }
 
-  // Fetch users from auth.users and profiles from public.profiles
+  // Fetch users from auth.users and profiles from public.profiles (including roles)
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("*, roles(id, name, colour)")
     .order("updated_at", { ascending: false })
 
   if (profilesError) {
@@ -37,8 +39,10 @@ export const load: PageServerLoad = async ({
       last_sign_in_at: user.last_sign_in_at,
       full_name: profile?.full_name || null,
       company_name: profile?.company_name || null,
-      website: profile?.website || null,
       unsubscribed: profile?.unsubscribed || false,
+      role_id: profile?.role_id || null,
+      role_name: profile?.roles?.name || null,
+      role_colour: profile?.roles?.colour || null,
     }
   })
 
@@ -61,34 +65,11 @@ export const actions: Actions = {
     const fullName = formData.get("fullName") as string
 
     // Validation
-    let validationError
-    const errorFields = []
-    if (!email || email === "") {
-      validationError = "Email is required"
-      errorFields.push("email")
-    } else if (!email.includes("@")) {
-      validationError = "A valid email address is required"
-      errorFields.push("email")
-    }
-    if (!password) {
-      validationError = "Password is required"
-      errorFields.push("password")
-    } else if (password.length < 6) {
-      validationError = "Password must be at least 6 characters long"
-      errorFields.push("password")
-    } else if (password.length > 72) {
-      validationError = "Password can be at most 72 characters long"
-      errorFields.push("password")
-    }
-    if (!fullName || fullName === "") {
-      validationError = "Full name is required"
-      errorFields.push("fullName")
-    }
-
-    if (validationError) {
+    const validation = validateUserCreate({ email, password, fullName })
+    if (!validation.valid) {
       return fail(400, {
-        errorMessage: validationError,
-        errorFields: [...new Set(errorFields)],
+        errorMessage: validation.error!,
+        errorFields: validation.errorFields,
         email,
         fullName,
       })
@@ -131,7 +112,7 @@ export const actions: Actions = {
       fullName,
     }
   },
-  updateUser: async ({ request, locals: { supabase, supabaseServiceRole, safeGetSession } }) => {
+  updateUser: async ({ request, locals: { supabaseServiceRole, safeGetSession } }) => {
     const { session } = await safeGetSession()
     if (!session) {
       redirect(303, "/")
@@ -142,32 +123,17 @@ export const actions: Actions = {
     const email = formData.get("email") as string
     const fullName = formData.get("fullName") as string
     const companyName = formData.get("companyName") as string
-    const website = formData.get("website") as string
 
     // Validation
-    let validationError
-    const errorFields = []
-    if (!email || email === "") {
-      validationError = "Email is required"
-      errorFields.push("email")
-    } else if (!email.includes("@")) {
-      validationError = "A valid email address is required"
-      errorFields.push("email")
-    }
-    if (!fullName || fullName === "") {
-      validationError = "Full name is required"
-      errorFields.push("fullName")
-    }
-
-    if (validationError) {
+    const validation = validateUserUpdate({ email, fullName })
+    if (!validation.valid) {
       return fail(400, {
-        errorMessage: validationError,
-        errorFields: [...new Set(errorFields)],
+        errorMessage: validation.error!,
+        errorFields: validation.errorFields,
         userId,
         email,
         fullName,
         companyName,
-        website,
       })
     }
 
@@ -187,21 +153,19 @@ export const actions: Actions = {
           email,
           fullName,
           companyName,
-          website,
         })
       }
     }
 
     // Update profile
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseServiceRole
       .from("profiles")
-      .upsert({
-        id: userId,
+      .update({
         full_name: fullName,
         company_name: companyName || null,
-        website: website || null,
-        updated_at: new Date(),
+        updated_at: new Date().toISOString(),
       })
+      .eq('id', userId)
 
     if (profileError) {
       console.error("Error updating profile:", profileError)
@@ -211,7 +175,6 @@ export const actions: Actions = {
         email,
         fullName,
         companyName,
-        website,
       })
     }
 
@@ -221,10 +184,9 @@ export const actions: Actions = {
       email,
       fullName,
       companyName,
-      website,
     }
   },
-  impersonateUser: async ({ request, locals: { supabase, supabaseServiceRole, safeGetSession }, cookies }) => {
+  impersonateUser: async ({ request, locals: { supabase, supabaseServiceRole, safeGetSession }, cookies, getClientAddress }) => {
     const { session } = await safeGetSession()
     if (!session) {
       redirect(303, "/")
@@ -333,6 +295,20 @@ export const actions: Actions = {
           errorMessage: "Failed to extract authentication tokens",
         })
       }
+
+      // Log the impersonation action
+      await createLog({
+        supabase,
+        userId: session.user.id,
+        action: "impersonate_user",
+        entityType: "user",
+        entityId: userId,
+        ipAddress: getClientAddress(),
+        metadata: {
+          impersonated_user_email: userData.user.email,
+          admin_user_email: session.user.email,
+        },
+      })
 
       // Store tokens to redirect with - must be done outside try-catch
       const redirectUrl = `/auth/callback?access_token=${encodeURIComponent(accessToken)}&refresh_token=${encodeURIComponent(refreshToken)}&next=/account`

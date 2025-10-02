@@ -28,5 +28,5 @@ export const GET = async (event) => {
     console.error('Error exchanging code:', error)
   }
 
-  throw redirect(303, '/sign_in')
+  throw redirect(303, '/')
 }

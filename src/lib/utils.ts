@@ -7,6 +7,53 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Format a date string to a human-readable format
+ */
+export function formatDate(dateString: string | null): string {
+  if (!dateString) return "Never"
+  const date = new Date(dateString)
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })
+}
+
+/**
+ * Capitalize first letter of each word and replace underscores/hyphens with spaces
+ */
+export function formatPathSegment(segment: string): string {
+  return segment
+    .replace(/[_-]/g, " ")
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+/**
+ * Validate email format
+ */
+export function isValidEmail(email: string): boolean {
+  return email.includes("@") && email.length > 0
+}
+
+/**
+ * Validate password requirements
+ */
+export function validatePassword(password: string): { valid: boolean; error?: string } {
+  if (!password) {
+    return { valid: false, error: "Password is required" }
+  }
+  if (password.length < 6) {
+    return { valid: false, error: "Password must be at least 6 characters long" }
+  }
+  if (password.length > 72) {
+    return { valid: false, error: "Password can be at most 72 characters long" }
+  }
+  return { valid: true }
+}
+
 type FlyAndScaleParams = {
 	y?: number;
 	x?: number;

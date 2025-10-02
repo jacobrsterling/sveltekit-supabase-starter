@@ -5,8 +5,10 @@
   import { Button } from "$lib/components/ui/button"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
-  import { Plus, Pencil, UserRound } from "lucide-svelte"
+  import RoleBadge from "$lib/components/role-badge.svelte"
+  import { Plus, Pencil, UserRound, ShieldCheck } from "lucide-svelte"
   import { enhance } from "$app/forms"
+  import { formatDate } from "$lib/utils"
   import type { PageData, ActionData } from "./$types"
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
@@ -15,16 +17,6 @@
   let editDialogOpen = $state(false)
   let isSubmitting = $state(false)
   let editingUser = $state<any>(null)
-
-  function formatDate(dateString: string | null) {
-    if (!dateString) return "Never"
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    })
-  }
 
   function openEditDialog(user: any) {
     editingUser = { ...user }
@@ -50,13 +42,18 @@
       <h1 class="text-3xl font-bold tracking-tight">Users</h1>
       <p class="text-muted-foreground mt-2">Manage and view all users in the system</p>
     </div>
-    <Dialog.Root bind:open={dialogOpen}>
-      <Dialog.Trigger>
-        <Button>
-          <Plus class="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </Dialog.Trigger>
+    <div class="flex gap-2">
+      <Button variant="outline" href="/account/roles">
+        <ShieldCheck class="mr-2 h-4 w-4" />
+        View Roles
+      </Button>
+      <Dialog.Root bind:open={dialogOpen}>
+        <Dialog.Trigger>
+          <Button>
+            <Plus class="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </Dialog.Trigger>
       <Dialog.Content>
         <Dialog.Header>
           <Dialog.Title>Create New User</Dialog.Title>
@@ -130,7 +127,8 @@
           </Dialog.Footer>
         </form>
       </Dialog.Content>
-    </Dialog.Root>
+      </Dialog.Root>
+    </div>
   </div>
 
   <!-- Edit User Dialog -->
@@ -194,16 +192,6 @@
               value={editingUser?.company_name || ""}
             />
           </div>
-          <div class="grid gap-2">
-            <Label for="edit-website">Website</Label>
-            <Input
-              id="edit-website"
-              name="website"
-              type="text"
-              placeholder="https://example.com"
-              value={editingUser?.website || ""}
-            />
-          </div>
         </div>
         <Dialog.Footer>
           <Button type="button" variant="outline" onclick={() => editDialogOpen = false}>
@@ -232,7 +220,7 @@
               <Table.Head>Email</Table.Head>
               <Table.Head>Full Name</Table.Head>
               <Table.Head>Company</Table.Head>
-              <Table.Head>Website</Table.Head>
+              <Table.Head>Role</Table.Head>
               <Table.Head>Created</Table.Head>
               <Table.Head>Last Sign In</Table.Head>
               <Table.Head>Subscribed</Table.Head>
@@ -253,10 +241,8 @@
                   <Table.Cell>{user.full_name || "-"}</Table.Cell>
                   <Table.Cell>{user.company_name || "-"}</Table.Cell>
                   <Table.Cell>
-                    {#if user.website}
-                      <a href={user.website} target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">
-                        {user.website}
-                      </a>
+                    {#if user.role_name}
+                      <RoleBadge name={user.role_name} colour={user.role_colour} />
                     {:else}
                       -
                     {/if}

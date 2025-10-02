@@ -6,16 +6,28 @@ export const oauthProviders = ["github"] as Provider[]
 // Updated to use shadcn color system
 export const sharedAppearance = {
   theme: ThemeSupa,
+  variables: {
+    default: {
+      colors: {
+        brand: 'hsl(4 73% 44%)',  // Red primary color
+        brandAccent: 'hsl(4 73% 35%)',  // Darker red for hover
+      }
+    }
+  },
   style: {
     button: {
-      backgroundColor: 'hsl(var(--primary))',
-      color: 'hsl(var(--primary-foreground))',
+      backgroundColor: 'hsl(4 73% 44%)',
+      color: 'white',
       borderRadius: 'calc(var(--radius) - 2px)',
       padding: '0.5rem 1rem',
       fontSize: '0.875rem',
       fontWeight: '500',
       height: '2.5rem',
       transition: 'all 150ms',
+      border: 'none',
+    },
+    '.button:hover': {
+      backgroundColor: 'hsl(4 73% 35%)',
     },
     anchor: {
       color: 'hsl(var(--primary))',

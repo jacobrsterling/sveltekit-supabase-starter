@@ -4,7 +4,6 @@ declare global {
     errorFields?: string[]
     fullName?: string
     companyName?: string
-    website?: string
     email?: string
   }
 }

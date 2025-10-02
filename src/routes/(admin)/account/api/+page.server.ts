@@ -233,7 +233,6 @@ export const actions = {
     const formData = await request.formData()
     const fullName = formData.get("fullName") as string
     const companyName = formData.get("companyName") as string
-    const website = formData.get("website") as string
 
     let validationError
     const fieldMaxTextLength = 50
@@ -253,21 +252,12 @@ export const actions = {
       validationError = `Company name must be less than ${fieldMaxTextLength} characters`
       errorFields.push("companyName")
     }
-    if (!website) {
-      validationError =
-        "Company website is required. An app store URL is a good alternative if you don't have a website."
-      errorFields.push("website")
-    } else if (website.length > fieldMaxTextLength) {
-      validationError = `Company website must be less than ${fieldMaxTextLength} characters`
-      errorFields.push("website")
-    }
     if (validationError) {
       return fail(400, {
         errorMessage: validationError,
         errorFields,
         fullName,
         companyName,
-        website,
       })
     }
 
@@ -284,7 +274,6 @@ export const actions = {
         id: user.id,
         full_name: fullName,
         company_name: companyName,
-        website: website,
         updated_at: new Date(),
         unsubscribed: priorProfile?.unsubscribed ?? false,
       })
@@ -296,7 +285,6 @@ export const actions = {
         errorMessage: "Unknown error. If this persists please contact us.",
         fullName,
         companyName,
-        website,
       })
     }
 
@@ -306,7 +294,7 @@ export const actions = {
     if (newProfile) {
       await sendAdminEmail({
         subject: "Profile Created",
-        body: `Profile created by ${session.user.email}\nFull name: ${fullName}\nCompany name: ${companyName}\nWebsite: ${website}`,
+        body: `Profile created by ${session.user.email}\nFull name: ${fullName}\nCompany name: ${companyName}`,
       })
 
       // Send welcome email
@@ -325,7 +313,6 @@ export const actions = {
     return {
       fullName,
       companyName,
-      website,
     }
   },
   signout: async ({ locals: { supabase, safeGetSession } }) => {

@@ -6,10 +6,10 @@
 </script>
 
 <svelte:head>
-  <title>Settings</title>
+  <title>Account - EP Dealer Portal</title>
 </svelte:head>
 
-<h1 class="text-2xl font-bold mb-6">Settings</h1>
+<h1 class="text-2xl font-bold mb-6">Account</h1>
 
 <SettingsModule
   title="Profile"
@@ -20,11 +20,6 @@
       id: "companyName",
       label: "Company Name",
       initialValue: profile?.company_name ?? "",
-    },
-    {
-      id: "website",
-      label: "Company Website",
-      initialValue: profile?.website ?? "",
     },
   ]}
   editButtonTitle="Edit Profile"

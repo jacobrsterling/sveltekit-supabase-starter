@@ -29,7 +29,7 @@
 
       <div class="mt-4 text-center text-sm text-muted-foreground">
         Already have an account?
-        <a href="/sign_in" class="text-primary hover:underline ml-1">
+        <a href="/" class="text-primary hover:underline ml-1">
           Sign in
         </a>
       </div>

@@ -1,42 +1,69 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button"
-  import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "$lib/components/ui/card"
+  import { Auth } from "@supabase/auth-ui-svelte"
+  import { sharedAppearance, oauthProviders } from "./login_config"
+  import { goto } from "$app/navigation"
+  import { onMount } from "svelte"
+  import { page } from "$app/stores"
+  import { Card, CardHeader, CardTitle, CardContent } from "$lib/components/ui/card"
+  import { Alert, AlertDescription } from "$lib/components/ui/alert"
+
+  let { data } = $props()
+  let { supabase } = data
+
+  onMount(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
+      // Redirect to account after successful login
+      if (event === "SIGNED_IN") {
+        // Small delay to ensure auth state is propagated
+        setTimeout(() => {
+          goto("/account")
+        }, 100)
+      }
+    })
+
+    return () => authListener.subscription.unsubscribe()
+  })
 </script>
 
 <svelte:head>
-  <title>EP Dealer Portal - Login</title>
+  <title>Sign In - EP Dealer Portal</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center bg-gray-50">
   <Card class="w-[400px]">
-    <CardHeader class="space-y-1">
+    <CardHeader>
       <CardTitle class="text-2xl font-bold text-center">EP Dealer Portal</CardTitle>
-      <CardDescription class="text-center">
-        Access your dealer dashboard
-      </CardDescription>
     </CardHeader>
-    <CardContent class="space-y-4">
-      <div class="space-y-2">
-        <h3 class="text-lg font-semibold">Welcome Back</h3>
-        <Button href="/sign_in" class="w-full" size="lg">
-          Sign In
-        </Button>
-      </div>
+    <CardContent>
+      {#if $page.url.searchParams.get("verified") == "true"}
+        <Alert class="mb-4">
+          <AlertDescription>
+            Email verified! Please sign in.
+          </AlertDescription>
+        </Alert>
+      {/if}
 
-      <div class="relative">
-        <div class="absolute inset-0 flex items-center">
-          <span class="w-full border-t" />
-        </div>
-        <div class="relative flex justify-center text-xs uppercase">
-          <span class="bg-background px-2 text-muted-foreground">Or</span>
-        </div>
-      </div>
+      <Auth
+        supabaseClient={data.supabase}
+        view="sign_in"
+        redirectTo={`${data.url}/auth/callback`}
+        providers={oauthProviders}
+        socialLayout="horizontal"
+        showLinks={false}
+        appearance={sharedAppearance}
+        additionalData={undefined}
+      />
 
-      <div class="space-y-2">
-        <p class="text-sm text-muted-foreground">New to the platform?</p>
-        <Button href="/sign_up" variant="outline" class="w-full" size="lg">
-          Create Account
-        </Button>
+      <div class="mt-4 space-y-2 text-center text-sm">
+        <a href="/forgot_password" class="text-primary hover:underline block">
+          Forgot password?
+        </a>
+        <div class="text-muted-foreground">
+          Don't have an account?
+          <a href="/sign_up" class="text-primary hover:underline ml-1">
+            Create account
+          </a>
+        </div>
       </div>
     </CardContent>
   </Card>
