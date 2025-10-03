@@ -1,29 +1,33 @@
 <script lang="ts">
   import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "$lib/components/ui/card"
-  import * as Table from "$lib/components/ui/table"
   import * as Dialog from "$lib/components/ui/dialog"
   import { Button } from "$lib/components/ui/button"
   import { Input } from "$lib/components/ui/input"
   import { Label } from "$lib/components/ui/label"
-  import RoleBadge from "$lib/components/role-badge.svelte"
   import PageHeader from "$lib/components/page-header.svelte"
   import PageTitle from "$lib/components/page-title.svelte"
-  import { Plus, Pencil, UserRound, ShieldCheck } from "lucide-svelte"
+  import { Plus, ShieldCheck } from "lucide-svelte"
   import { enhance } from "$app/forms"
-  import { formatDate } from "$lib/utils"
   import type { PageData, ActionData } from "./$types"
+  import DataTable from "./data-table.svelte"
+  import { columns, type User } from "./columns"
+  import { setContext } from "svelte"
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
   let dialogOpen = $state(false)
   let editDialogOpen = $state(false)
   let isSubmitting = $state(false)
-  let editingUser = $state<any>(null)
+  let editingUser = $state<User | null>(null)
 
-  function openEditDialog(user: any) {
+  function openEditDialog(user: User) {
     editingUser = { ...user }
     editDialogOpen = true
   }
+
+  // Set context for actions cell to access
+  setContext('openEditDialog', openEditDialog)
+  setContext('currentUserId', data.currentUserId)
 
   $effect(() => {
     if (form?.success) {
@@ -209,80 +213,7 @@
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="rounded-md border">
-        <Table.Root>
-          <Table.Header>
-            <Table.Row>
-              <Table.Head>Email</Table.Head>
-              <Table.Head>Full Name</Table.Head>
-              <Table.Head>Company</Table.Head>
-              <Table.Head>Role</Table.Head>
-              <Table.Head>Created</Table.Head>
-              <Table.Head>Last Sign In</Table.Head>
-              <Table.Head>Subscribed</Table.Head>
-              <Table.Head class="w-[120px]">Actions</Table.Head>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {#if data.users.length === 0}
-              <Table.Row>
-                <Table.Cell colspan={8} class="h-24 text-center text-muted-foreground">
-                  No users found
-                </Table.Cell>
-              </Table.Row>
-            {:else}
-              {#each data.users as user}
-                <Table.Row>
-                  <Table.Cell class="font-medium">{user.email}</Table.Cell>
-                  <Table.Cell>{user.full_name || "-"}</Table.Cell>
-                  <Table.Cell>{user.company_name || "-"}</Table.Cell>
-                  <Table.Cell>
-                    {#if user.role_name}
-                      <RoleBadge name={user.role_name} colour={user.role_colour} />
-                    {:else}
-                      -
-                    {/if}
-                  </Table.Cell>
-                  <Table.Cell>{formatDate(user.created_at)}</Table.Cell>
-                  <Table.Cell>{formatDate(user.last_sign_in_at)}</Table.Cell>
-                  <Table.Cell>
-                    {#if user.unsubscribed}
-                      <span class="text-red-600">No</span>
-                    {:else}
-                      <span class="text-green-600">Yes</span>
-                    {/if}
-                  </Table.Cell>
-                  <Table.Cell>
-                    <div class="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => openEditDialog(user)}
-                        title="Edit user"
-                      >
-                        <Pencil class="h-4 w-4" />
-                      </Button>
-                      {#if user.id !== data.currentUserId}
-                        <form method="POST" action="?/impersonateUser" use:enhance>
-                          <input type="hidden" name="userId" value={user.id} />
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="sm"
-                            title="Impersonate user"
-                          >
-                            <UserRound class="h-4 w-4" />
-                          </Button>
-                        </form>
-                      {/if}
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              {/each}
-            {/if}
-          </Table.Body>
-        </Table.Root>
-      </div>
+      <DataTable data={data.users} {columns} />
     </CardContent>
   </Card>
 </div>

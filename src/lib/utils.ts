@@ -8,15 +8,17 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
- * Format a date string to a human-readable format
+ * Format a date string to a human-readable format (UK format: DD/MM/YYYY HH:MM)
  */
 export function formatDate(dateString: string | null): string {
   if (!dateString) return "Never"
   const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleString("en-GB", {
     year: "numeric",
     month: "short",
     day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   })
 }
 

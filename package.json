@@ -53,6 +53,7 @@
     "@supabase/auth-ui-svelte": "^0.2.9",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.2",
+    "@tanstack/table-core": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "handlebars": "^4.7.8",
     "lucide-react": "^0.544.0",

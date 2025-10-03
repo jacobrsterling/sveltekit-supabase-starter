@@ -1,6 +1,5 @@
 <script lang="ts">
   import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "$lib/components/ui/card"
-  import * as Table from "$lib/components/ui/table"
   import * as Dialog from "$lib/components/ui/dialog"
   import { Button } from "$lib/components/ui/button"
   import { Input } from "$lib/components/ui/input"
@@ -8,23 +7,28 @@
   import RoleBadge from "$lib/components/role-badge.svelte"
   import PageHeader from "$lib/components/page-header.svelte"
   import PageTitle from "$lib/components/page-title.svelte"
-  import { ArrowLeft, Pencil } from "lucide-svelte"
-  import { formatDate } from "$lib/utils"
-  import { enhance, applyAction } from "$app/forms"
+  import { ArrowLeft } from "lucide-svelte"
+  import { enhance } from "$app/forms"
   import type { PageData, ActionData } from "./$types"
+  import DataTable from "./data-table.svelte"
+  import { columns, type Role } from "./columns"
+  import { setContext } from "svelte"
 
   let { data, form }: { data: PageData; form: ActionData } = $props()
 
   let editDialogOpen = $state(false)
-  let editingRole = $state<any>(null)
+  let editingRole = $state<Role | null>(null)
   let editingColour = $state("#3b82f6")
   let isSubmitting = $state(false)
 
-  function openEditDialog(role: any) {
+  function openEditDialog(role: Role) {
     editingRole = { ...role }
     editingColour = role.colour || "#3b82f6"
     editDialogOpen = true
   }
+
+  // Set context for actions cell to access
+  setContext('openEditDialog', openEditDialog)
 </script>
 
 <PageTitle title="Roles" />
@@ -121,49 +125,7 @@
       </CardDescription>
     </CardHeader>
     <CardContent>
-      <div class="rounded-md border">
-        <Table.Root>
-          <Table.Header>
-            <Table.Row>
-              <Table.Head>Name</Table.Head>
-              <Table.Head>Colour</Table.Head>
-              <Table.Head>Description</Table.Head>
-              <Table.Head>Created</Table.Head>
-              <Table.Head class="w-[80px]">Actions</Table.Head>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {#if data.roles.length === 0}
-              <Table.Row>
-                <Table.Cell colspan={5} class="h-24 text-center text-muted-foreground">
-                  No roles found
-                </Table.Cell>
-              </Table.Row>
-            {:else}
-              {#each data.roles as role (role.id)}
-                <Table.Row>
-                  <Table.Cell class="font-medium">{role.name}</Table.Cell>
-                  <Table.Cell>
-                    <RoleBadge name={role.name} colour={role.colour} />
-                  </Table.Cell>
-                  <Table.Cell>{role.description || "-"}</Table.Cell>
-                  <Table.Cell>{formatDate(role.created_at)}</Table.Cell>
-                  <Table.Cell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onclick={() => openEditDialog(role)}
-                      title="Edit colour"
-                    >
-                      <Pencil class="h-4 w-4" />
-                    </Button>
-                  </Table.Cell>
-                </Table.Row>
-              {/each}
-            {/if}
-          </Table.Body>
-        </Table.Root>
-      </div>
+      <DataTable data={data.roles} {columns} />
     </CardContent>
   </Card>
 </div>

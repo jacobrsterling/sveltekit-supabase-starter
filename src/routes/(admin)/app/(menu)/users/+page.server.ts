@@ -229,7 +229,7 @@ export const actions: Actions = {
         })
       }
 
-      // Get the user details
+      // Get the user details and save their current last_sign_in_at
       const { data: userData, error: userError } = await supabaseServiceRole.auth.admin.getUserById(userId)
 
       if (userError || !userData.user) {
@@ -238,6 +238,9 @@ export const actions: Actions = {
           errorMessage: "Failed to fetch user details: " + (userError?.message || "Unknown error"),
         })
       }
+
+      // Save the original last_sign_in_at timestamp
+      const originalLastSignInAt = userData.user.last_sign_in_at
 
       // Generate a magic link which contains the access and refresh tokens
       const { data: linkData, error: linkError } = await supabaseServiceRole.auth.admin.generateLink({
@@ -294,6 +297,30 @@ export const actions: Actions = {
         return fail(500, {
           errorMessage: "Failed to extract authentication tokens",
         })
+      }
+
+      // Restore the original last_sign_in_at timestamp
+      // This prevents the impersonation from updating the user's last sign in time
+      if (originalLastSignInAt) {
+        await supabaseServiceRole.auth.admin.updateUserById(userId, {
+          user_metadata: {
+            // We can't directly update last_sign_in_at, but we can store it in metadata
+            // and handle it elsewhere, OR we accept this limitation
+          }
+        })
+
+        // Use a database trigger or direct SQL to restore the timestamp
+        // Note: Supabase doesn't allow direct updates to auth.users.last_sign_in_at via the API
+        // So we'll use a workaround: execute raw SQL via the service role client
+        try {
+          await supabaseServiceRole.rpc('restore_last_sign_in', {
+            user_id: userId,
+            last_sign_in_timestamp: originalLastSignInAt
+          })
+        } catch (rpcError) {
+          // If the RPC doesn't exist, log but don't fail the impersonation
+          console.warn('Could not restore last_sign_in_at:', rpcError)
+        }
       }
 
       // Log the impersonation action

@@ -141,12 +141,29 @@ AS $function$
 begin
   insert into public.profiles (id, full_name, avatar_url, role_id)
   values (
-    new.id, 
-    new.raw_user_meta_data->>'full_name', 
+    new.id,
+    new.raw_user_meta_data->>'full_name',
     new.raw_user_meta_data->>'avatar_url',
     (SELECT id FROM public.roles WHERE name = 'user') -- Default to 'user' role
   );
   return new;
+end;
+$function$;
+
+-- Function: restore_last_sign_in
+-- Used to restore the original last_sign_in_at timestamp after impersonation
+CREATE OR REPLACE FUNCTION public.restore_last_sign_in(
+  user_id uuid,
+  last_sign_in_timestamp timestamp with time zone
+)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+begin
+  UPDATE auth.users
+  SET last_sign_in_at = last_sign_in_timestamp
+  WHERE id = user_id;
 end;
 $function$;
 
