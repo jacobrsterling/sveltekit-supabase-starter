@@ -11,6 +11,7 @@
 DROP TABLE IF EXISTS public.logs CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP TABLE IF EXISTS public.roles CASCADE;
+DROP TABLE IF EXISTS public.settings CASCADE;
 
 -- Create roles table
 CREATE TABLE public.roles (
@@ -49,13 +50,62 @@ CREATE TABLE public.logs (
   CONSTRAINT logs_user_id_profiles_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
 );
 
+-- Create settings table
+CREATE TABLE public.settings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  
+  -- Basic settings info
+  key TEXT UNIQUE NOT NULL,
+  value JSONB,
+  default_value JSONB,
+  
+  -- Display information
+  label TEXT NOT NULL,
+  description TEXT,
+  input_type TEXT NOT NULL DEFAULT 'text',
+  
+  -- Grouping and organization
+  group_key TEXT NOT NULL DEFAULT 'general',
+  group_label TEXT,
+  sort_order INTEGER DEFAULT 0,
+  
+  -- Validation and options
+  validation JSONB,
+  options JSONB,
+  
+  -- Permissions (using role names as text arrays)
+  view_roles TEXT[] DEFAULT ARRAY['admin'],
+  edit_roles TEXT[] DEFAULT ARRAY['admin'],
+  
+  -- UI hints
+  is_readonly BOOLEAN DEFAULT false,
+  is_hidden BOOLEAN DEFAULT false,
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL
+);
+
+-- Default setting
+INSERT INTO public.settings (key, value, default_value, label, description, input_type, group_key, group_label, sort_order, validation, options, view_roles, edit_roles) VALUES
+  ('site_title', NULL, '"My Application"', 'Site Title', 'The name of your application', 'text', 'general', 1, '{"required": true, "maxLength": 100}', NULL, ARRAY['public'], ARRAY['admin'])
+ON CONFLICT (key) DO NOTHING;
+
 -- ============================================
 -- 2. CREATE INDEXES
 -- ============================================
 
+-- Logs indexes
 CREATE INDEX idx_logs_created_at ON public.logs USING btree (created_at DESC);
 CREATE INDEX idx_logs_user_id ON public.logs USING btree (user_id);
+
+-- Roles indexes
 CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name);
+
+-- Settings indexes (for performance on common queries)
+CREATE INDEX idx_settings_key ON public.settings(key);
+CREATE INDEX idx_settings_group ON public.settings(group_key, sort_order);
 
 -- ============================================
 -- 3. INSERT DEFAULT ROLES
@@ -63,12 +113,11 @@ CREATE UNIQUE INDEX roles_name_key ON public.roles USING btree (name);
 
 INSERT INTO public.roles (name, description, colour) VALUES 
   ('admin', 'Full system access', '#FF0000'),
-  ('moderator', 'Can moderate content', '#00FF00'),
   ('user', 'Standard user access', '#0000FF')
 ON CONFLICT (name) DO NOTHING;
 
 -- ============================================
--- 4. CREATE FUNCTIONS
+-- 5. CREATE FUNCTIONS
 -- ============================================
 
 -- Function: get_user_role
@@ -102,7 +151,7 @@ end;
 $function$;
 
 -- ============================================
--- 5. CREATE TRIGGERS
+-- 6. CREATE TRIGGERS
 -- ============================================
 
 -- Create trigger for new user signup
@@ -112,15 +161,16 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ============================================
--- 6. ENABLE ROW LEVEL SECURITY
+-- 7. ENABLE ROW LEVEL SECURITY
 -- ============================================
 
 ALTER TABLE public.logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
 
 -- ============================================
--- 7. CREATE RLS POLICIES
+-- 8. CREATE RLS POLICIES
 -- ============================================
 
 -- Logs policies
@@ -158,8 +208,28 @@ CREATE POLICY "Enable access for authenticated users only" ON public.roles
   AS PERMISSIVE FOR ALL TO authenticated
   USING (true);
 
+-- Settings policies
+CREATE POLICY "Users can view settings based on role" ON public.settings
+  FOR SELECT
+  USING (
+    public.get_user_role(auth.uid()) = ANY(view_roles) 
+    OR 'public' = ANY(view_roles)
+  );
+
+CREATE POLICY "Users can update settings based on role" ON public.settings
+  FOR UPDATE
+  USING (public.get_user_role(auth.uid()) = ANY(edit_roles));
+
+CREATE POLICY "Only admins can insert settings" ON public.settings
+  FOR INSERT
+  WITH CHECK (public.get_user_role(auth.uid()) = 'admin');
+
+CREATE POLICY "Only admins can delete settings" ON public.settings
+  FOR DELETE
+  USING (public.get_user_role(auth.uid()) = 'admin');
+
 -- ============================================
--- 8. GRANT PERMISSIONS
+-- 9. GRANT PERMISSIONS
 -- ============================================
 
 -- Grant necessary permissions

@@ -1,26 +1,33 @@
 <script lang="ts">
-  import { Home, Settings, LogOut, BarChart3, Users, AlertCircle, ScrollText } from "lucide-svelte";
+  import { Home, Settings, LogOut, BarChart3, Users, AlertCircle, ScrollText, UserCircle } from "lucide-svelte";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import { Button } from "$lib/components/ui/button";
-  import { WebsiteName } from "../../config";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { enhance } from "$app/forms";
+  import { useSidebar } from "$lib/components/ui/sidebar/context.svelte.js";
 
   interface Props {
     variant?: "sidebar" | "floating" | "inset";
+    siteTitle?: string;
   }
 
-  let { variant = "sidebar" }: Props = $props();
+  let { variant = "sidebar", siteTitle = "App" }: Props = $props();
   let currentPath = $derived($page.url.pathname);
   let isImpersonating = $derived($page.data.isImpersonating);
   let originalUserEmail = $derived($page.data.originalUserEmail);
   let currentUserEmail = $derived($page.data.session?.user?.email);
 
+  const sidebar = useSidebar();
+
   function navigate(url: string) {
     return (e: MouseEvent) => {
       e.preventDefault();
       goto(url);
+      // Close mobile sidebar after navigation
+      if (sidebar.isMobile) {
+        sidebar.setOpenMobile(false);
+      }
     };
   }
 </script>
@@ -36,8 +43,8 @@
                 <BarChart3 class="size-4" />
               </div>
               <div class="grid flex-1 text-left text-sm leading-tight">
-                <span class="truncate font-semibold">{WebsiteName}</span>
-                <span class="truncate text-xs text-muted-foreground">Dealer Portal</span>
+                <span class="truncate font-semibold">{siteTitle}</span>
+                <span class="truncate text-xs text-muted-foreground">Under development</span>
               </div>
             </a>
           {/snippet}
@@ -52,9 +59,9 @@
       <Sidebar.GroupContent>
         <Sidebar.Menu>
           <Sidebar.MenuItem>
-            <Sidebar.MenuButton isActive={currentPath === "/account"}>
+            <Sidebar.MenuButton isActive={currentPath === "/app"}>
               {#snippet child({ props })}
-                <a href="/account" onclick={navigate("/account")} {...props}>
+                <a href="/app" onclick={navigate("/app")} {...props}>
                   <Home class="size-4" />
                   <span>Dashboard</span>
                 </a>
@@ -64,7 +71,7 @@
           <Sidebar.MenuItem>
             <Sidebar.MenuButton isActive={currentPath.includes("/users")}>
               {#snippet child({ props })}
-                <a href="/account/users" onclick={navigate("/account/users")} {...props}>
+                <a href="/app/users" onclick={navigate("/app/users")} {...props}>
                   <Users class="size-4" />
                   <span>Users</span>
                 </a>
@@ -74,7 +81,7 @@
           <Sidebar.MenuItem>
             <Sidebar.MenuButton isActive={currentPath.includes("/logs")}>
               {#snippet child({ props })}
-                <a href="/account/logs" onclick={navigate("/account/logs")} {...props}>
+                <a href="/app/logs" onclick={navigate("/app/logs")} {...props}>
                   <ScrollText class="size-4" />
                   <span>Logs</span>
                 </a>
@@ -82,10 +89,20 @@
             </Sidebar.MenuButton>
           </Sidebar.MenuItem>
           <Sidebar.MenuItem>
-            <Sidebar.MenuButton isActive={currentPath.includes("/settings")}>
+            <Sidebar.MenuButton isActive={currentPath === "/app/settings"}>
               {#snippet child({ props })}
-                <a href="/account/settings" onclick={navigate("/account/settings")} {...props}>
+                <a href="/app/settings" onclick={navigate("/app/settings")} {...props}>
                   <Settings class="size-4" />
+                  <span>Settings</span>
+                </a>
+              {/snippet}
+            </Sidebar.MenuButton>
+          </Sidebar.MenuItem>
+          <Sidebar.MenuItem>
+            <Sidebar.MenuButton isActive={currentPath === "/app/account" || currentPath.startsWith("/app/account/")}>
+              {#snippet child({ props })}
+                <a href="/app/account" onclick={navigate("/app/account")} {...props}>
+                  <UserCircle class="size-4" />
                   <span>Account</span>
                 </a>
               {/snippet}
@@ -107,7 +124,7 @@
               <p class="text-xs text-amber-700 truncate">{currentUserEmail}</p>
             </div>
           </div>
-          <form method="POST" action="/account/users?/stopImpersonation" use:enhance class="w-full">
+          <form method="POST" action="/app/users?/stopImpersonation" use:enhance class="w-full">
             <Button type="submit" variant="outline" size="sm" class="w-full text-xs h-7">
               Stop
             </Button>
@@ -119,7 +136,7 @@
       <Sidebar.MenuItem>
         <Sidebar.MenuButton>
           {#snippet child({ props })}
-            <a href="/account/sign_out" onclick={navigate("/account/sign_out")} {...props}>
+            <a href="/app/sign_out" onclick={navigate("/app/sign_out")} {...props}>
               <LogOut class="size-4" />
               <span>Sign Out</span>
             </a>

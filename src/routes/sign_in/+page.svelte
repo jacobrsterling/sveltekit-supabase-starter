@@ -12,11 +12,11 @@
 
   onMount(() => {
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event) => {
-      // Redirect to account after successful login
+      // Redirect to app after successful login
       if (event === "SIGNED_IN") {
         // Small delay to ensure auth state is propagated
         setTimeout(() => {
-          goto("/account")
+          goto("/app")
         }, 100)
       }
     })

@@ -5,7 +5,7 @@ export const GET = async (event) => {
   const code = url.searchParams.get('code')
   const accessToken = url.searchParams.get('access_token')
   const refreshToken = url.searchParams.get('refresh_token')
-  const next = url.searchParams.get('next') ?? '/account'
+  const next = url.searchParams.get('next') ?? '/app'
 
   // Handle token-based auth (for impersonation)
   if (accessToken && refreshToken) {

@@ -1,0 +1,31 @@
+<script lang="ts">
+  import SettingsModule from "../settings_module.svelte"
+  import PageTitle from "$lib/components/page-title.svelte"
+</script>
+
+<PageTitle title="Reset Password" />
+
+<h1 class="text-2xl font-bold mb-6">Settings</h1>
+
+<SettingsModule
+  title="Reset Password"
+  editable={true}
+  saveButtonTitle="Reset Password"
+  successTitle="Password Changed"
+  successBody="On next sign in, use your new password."
+  formTarget="/account/api?/updatePassword"
+  fields={[
+    {
+      id: "newPassword1",
+      label: "New Password",
+      initialValue: "",
+      inputType: "password",
+    },
+    {
+      id: "newPassword2",
+      label: "Confirm New Password",
+      initialValue: "",
+      inputType: "password",
+    },
+  ]}
+/>

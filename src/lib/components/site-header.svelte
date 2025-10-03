@@ -9,7 +9,7 @@
   let breadcrumbs = $derived.by(() => {
     const segments = currentPath.split("/").filter(Boolean);
 
-    // Remove 'account' from segments as it's always the root
+    // Remove 'app' from segments as it's always the root
     const pathSegments = segments.slice(1);
 
     if (pathSegments.length === 0) return [];
@@ -18,13 +18,8 @@
     return pathSegments.map((segment, index) => {
       let formatted = formatPathSegment(segment);
 
-      // Rename "Settings" to "Account"
-      if (formatted === "Settings") {
-        formatted = "Account";
-      }
-
       // Build the URL up to this point
-      const url = "/account/" + pathSegments.slice(0, index + 1).join("/");
+      const url = "/app/" + pathSegments.slice(0, index + 1).join("/");
 
       return { name: formatted, url, isLast: index === pathSegments.length - 1 };
     });
@@ -35,7 +30,7 @@
   <SidebarTrigger class="-ml-1" />
   <Separator orientation="vertical" class="mr-2 h-4" />
   <div class="flex items-center gap-2 text-sm">
-    <a href="/account" class="text-muted-foreground hover:text-foreground">Dashboard</a>
+    <a href="/app" class="text-muted-foreground hover:text-foreground">Dashboard</a>
     {#each breadcrumbs as crumb}
       <span class="text-muted-foreground">/</span>
       {#if crumb.isLast}
